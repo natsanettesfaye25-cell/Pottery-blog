@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>የግጥም ማዕበል - Poetry Blog</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        header h1 {
+            color: #bb86fc;
+            margin-bottom: 5px;
+        }
+        .form-container {
+            background-color: #1e1e1e;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+        .form-container input, .form-container textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            background-color: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .form-container button {
+            background-color: #bb86fc;
+            color: #121212;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 15px;
+        }
+        .form-container button:hover {
+            background-color: #9955e8;
+        }
+        .post-card {
+            background-color: #1e1e1e;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .post-title {
+            color: #ffffff;
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+        .author {
+            font-size: 13px;
+            color: #bb86fc;
+            margin-bottom: 12px;
+        }
+        .post-content {
+            line-height: 1.6;
+            word-break: break-word;
+            color: #d1d1d1;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            border-top: 1px solid #2a2a2a;
+            padding-top: 12px;
+        }
+        .like-btn {
+            background: none;
+            border: 1px solid #bb86fc;
+            color: #bb86fc;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .delete-btn {
+            background: none;
+            border: 1px solid #cf6679;
+            color: #cf6679;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>✍️ የግጥም ማዕበል</h1>
+        <p>ልብ ውስጥ ያሉትን በቃል እና በግጥም እናውራ</p>
+    </header>
+
+    <div class="form-container">
+        <h3>አዲስ ግጥም አጋራ</h3>
+        <input type="text" id="authorName" placeholder="የጸሐፊው ስም (ለምሳሌ፦ ሊሉ)...">
+        <input type="text" id="postTitle" placeholder="የግጥሙ ርዕስ...">
+        <textarea id="postContent" rows="3" placeholder="ግጥምህን እዚህ ጻፍ..."></textarea>
+        <button onclick="addPost()">ፖስት አድርግ</button>
+    </div>
+
+    <main id="feedContainer"></main>
+
+    <script>
+        let posts = JSON.parse(localStorage.getItem("poetry_posts")) || [
+            { id: 1, author: "ሊሉ", title: "የናፍቆት ስንኝ", content: "ናፍቆትም ይነፍሳል እንደሊዙት አየር፣\nልብ ውስጥ ተቀምጦ ዝምታን ሲዘክር...", likes: 0 },
+            { id: 2, author: "ኢሊ-ዲያ", title: "ባዶ ቃል", content: "ቃል አለ ያልነበረ፣ ትርጉሙ የጠፋ፣\nበልብ መዝገብ ውስጥ ብቻውን የሰፈረ...", likes: 0 }
+        ];
+
+        function renderPosts() {
+            let feed = document.getElementById("feedContainer");
+            feed.innerHTML = "";
+            posts.forEach(post => {
+                let card = document.createElement("div");
+                card.className = "post-card";
+                card.innerHTML = `
+                    <h3 class="post-title">${post.title}</h3>
+                    <div class="author">በ - ${post.author}</div>
+                    <p class="post-content">${post.content.replace(/\n/g, '<br>')}</p>
+                    <div class="actions">
+                        <button class="like-btn" onclick="likePost(${post.id})">❤️ ${post.likes}</button>
+                        <button class="delete-btn" onclick="deletePost(${post.id})">🗑️ አጥፋ</button>
+                    </div>
+                `;
+                feed.appendChild(card);
+            });
+            localStorage.setItem("poetry_posts", JSON.stringify(posts));
+        }
+
+        function addPost() {
+            let author = document.getElementById("authorName").value;
+            let title = document.getElementById("postTitle").value;
+            let content = document.getElementById("postContent").value;
+
+            if(author.trim() === "" || title.trim() === "" || content.trim() === "") {
+                alert("እባክዎ ስም፣ ርዕስ እና ግጥም ሙሉውን ይሙሉ!");
+                return;
+            }
+
+            posts.push({ id: Date.now(), author: author, title: title, content: content, likes: 0 });
+            
+            document.getElementById("authorName").value = "";
+            document.getElementById("postTitle").value = "";
+            document.getElementById("postContent").value = "";
+            
+            renderPosts();
+        }
+
+        function likePost(id) {
+            let post = posts.find(p => p.id === id);
+            if(post) {
+                post.likes += 1;
+                renderPosts();
+            }
+        }
+
+        function deletePost(id) {
+            posts = posts.filter(p => p.id !== id);
+            renderPosts();
+        }
+
+        renderPosts();
+    </script><script>
+        // የመጀመሪያዎቹ ግጥሞች ከጸሐፊ ስም ጋር
+        let posts = JSON.parse(localStorage.getItem("poetry_posts")) || [
+            { id: 1, author: "ሊሉ", title: "የናፍቆት ስንኝ", content: "ናፍቆትም ይነፍሳል እንደሊዙት አየር፣\nልብ ውስጥ ተቀምጦ ዝምታን ሲዘክር...", likes: 0 },
+            { id: 2, author: "ኢሊ-ዲያ", title: "ባዶ ቃል", content: "ቃል አለ ያልነበረ፣ ትርጉሙ የጠፋ፣\nበልብ መዝገብ ውስጥ ብቻውን የሰፈረ...", likes: 0 }
+        ];
+
+        function renderPosts() {
+            let feed = document.getElementById("feedContainer");
+            feed.innerHTML = "";
+            posts.forEach(post => {
+                let card = document.createElement("div");
+                card.className = "post-card";
+                card.innerHTML = `
+                    <h3 class="post-title">${post.title}</h3>
+                    <div class="author">በ - ${post.author || "ያልታወቀ"}</div>
+                    <p class="post-content">${post.content.replace(/\n/g, '<br>')}</p>
+                    <div class="actions">
+                        <button class="like-btn" onclick="likePost(${post.id})">❤️ ${post.likes}</button>
+                        <button class="delete-btn" onclick="deletePost(${post.id})">🗑️ አጥፋ</button>
+                    </div>
+                `;
+                feed.appendChild(card);
+            });
+            localStorage.setItem("poetry_posts", JSON.stringify(posts));
+        }
+
+        function addPost() {
+            let author = document.getElementById("authorName").value;
+            let title = document.getElementById("postTitle").value;
+            let content = document.getElementById("postContent").value;
+
+            if(author.trim() === "" || title.trim() === "" || content.trim() === "") {
+                alert("እባክዎ ስም፣ ርዕስ እና ግጥም ሙሉውን ይሙሉ!");
+                return;
+            }
+
+            posts.push({ id: Date.now(), author: author, title: title, content: content, likes: 0 });
+            
+            document.getElementById("authorName").value = "";
+            document.getElementById("postTitle").value = "";
+            document.getElementById("postContent").value = "";
+            
+            renderPosts();
+        }
+
+        function likePost(id) {
+            let post = posts.find(p => p.id === id);
+            if(post) {
+                post.likes += 1;
+                renderPosts();
+            }
+        }
+
+        function deletePost(id) {
+            posts = posts.filter(p => p.id !== id);
+            renderPosts();
+        }
+
+        renderPosts();
+    </script>
+
+</body>
+</html>
